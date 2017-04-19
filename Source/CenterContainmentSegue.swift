@@ -25,8 +25,8 @@ open class CenterContainmentSegue: UIStoryboardSegue{
     
     override open func perform() {
         if let sideController = self.source as? SideMenuController {
-            guard let destinationController = destination as? UINavigationController else {
-                fatalError("Destination controller needs to be an instance of UINavigationController")
+            guard let destinationController = destination as? UITabBarController else {
+                fatalError("Destination controller needs to be an instance of UITabBarController")
             }
             sideController.embed(centerViewController: destinationController)
         } else {

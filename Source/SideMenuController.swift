@@ -1,7 +1,7 @@
 //
 //  SideMenuController.swift
 //
-//  Copyright (c) 2015 Teodor Patraş
+//  Copyright (c) 2017 Teodor Patraş
 //
 //  Permission is hereby granted, free of charge, to any person obtaining a copy
 //  of this software and associated documentation files (the "Software"), to deal
@@ -28,6 +28,10 @@ public protocol SideMenuControllerDelegate: class {
     func sideMenuControllerDidReveal(_ sideMenuController: SideMenuController)
     func sideMenuControllerWillReveal(_ sideMenuController: SideMenuController)
     func sideMenuControllerWillHide(_ sideMenuController: SideMenuController)
+}
+
+public protocol SideMenuViewDelegate: class {
+    func sideMenuControllerWillReveal(_ sideMenuController: SideMenuController)
 }
 
 // MARK: - Public methods -
@@ -91,6 +95,13 @@ public extension SideMenuController {
      */
     public func embed(centerViewController controller: UIViewController, cacheIdentifier: String? = nil) {
         
+        guard controller !== centerViewController else {
+            if sidePanelVisible {
+                animate(toReveal: false)
+            }
+            
+            return
+        }
         if let id = cacheIdentifier {
             controllersCache[id] = controller
         }
@@ -134,6 +145,7 @@ open class SideMenuController: UIViewController, UIGestureRecognizerDelegate {
     // MARK: Public
     
     open weak var delegate: SideMenuControllerDelegate?
+    open weak var sideViewDelegate: SideMenuViewDelegate?
     open static var preferences: Preferences = Preferences()
     internal(set) open var sidePanelVisible = false
     
@@ -158,7 +170,7 @@ open class SideMenuController: UIViewController, UIGestureRecognizerDelegate {
     var transitionInProgress = false
     var flickVelocity: CGFloat = 0
     
-
+    
     lazy var sidePanelPosition: SidePanelPosition = {
         return self._preferences.drawing.sidePanelPosition
     }()
@@ -187,7 +199,7 @@ open class SideMenuController: UIViewController, UIGestureRecognizerDelegate {
     open override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         NotificationCenter.default.addObserver(self, selector: #selector(SideMenuController.repositionViews), name: .UIApplicationWillChangeStatusBarFrame, object: UIApplication.shared)
-       
+        
     }
     
     override open func viewWillDisappear(_ animated: Bool) {
@@ -323,6 +335,7 @@ open class SideMenuController: UIViewController, UIGestureRecognizerDelegate {
         if reveal {
             set(statusBarHidden: reveal)
             self.delegate?.sideMenuControllerWillReveal(self)
+            self.sideViewDelegate?.sideMenuControllerWillReveal(self)
         }
         else
         {
